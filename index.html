@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- TAB TITLE -->
+  <title>OneDrive</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #121212, #1db954);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .player {
+      width: 350px;
+      background: #181818;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .title {
+      text-align: center;
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+    }
+
+    .cover {
+      width: 100%;
+      height: 300px;
+      background-size: cover;
+      background-position: center;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+
+    .song-name {
+      text-align: center;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 15px 0;
+    }
+
+    button {
+      background: #1db954;
+      border: none;
+      color: black;
+      padding: 10px 15px;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .lyrics {
+      height: 150px;
+      overflow-y: auto;
+      background: #101010;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .lyrics span {
+      color: #888;
+      display: block;
+    }
+
+    .lyrics span.active {
+      color: #1db954;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="player">
+    <div class="title">🔞🚫 Bleep Censored Music</div>
+
+    <div id="cover" class="cover"></div>
+
+    <div id="songName" class="song-name"></div>
+
+    <div class="controls">
+      <button onclick="prevSong()">⏮ Back</button>
+      <button onclick="togglePlay()">▶ / ⏸</button>
+      <button onclick="nextSong()">Next ⏭</button>
+    </div>
+
+    <div id="lyrics" class="lyrics"></div>
+
+    <audio id="audio"></audio>
+  </div>
+
+<script>
+  const songs = [
+    {
+      name: "Daylight (Drake)",
+      src: "music/daylight_drake.mp3",
+      cover: "covers/daylight.jpg",
+      lyrics: [
+        { time: 0, text: "Treat all my exes like Jehovah's Witnesses" },
+        { time: 4, text: "Free all the dogs and fuck all the witnesses" },
+        { time: 8, text: "They sittin' down, we standin' on business" },
+        { time: 12, text: "Ayy, standin' on business" },
+        { time: 16, text: "Standin' on business" },
+        { time: 20, text: "Standin' on business" },
+        { time: 24, text: "Standin' on, ooh" },
+        { time: 28, text: "I'm tryna fuck all the bitches that look like my ex" },
+        { time: 32, text: "I'm makin' her vex, I'm too complex" },
+        { time: 36, text: "I carry a whole lotta gold on my neck" },
+        { time: 40, text: "He talkin' down, he get put in a lake" },
+        { time: 44, text: "Capo the type to show up to the wake" },
+        { time: 48, text: "I'm geekin' hard, don't know what to take" }
+        // (truncated for brevity, you can add more lines if needed)
+      ]
+    },
+    {
+      name: "Parade on Cleveland (Young Thug ft. Drake)",
+      src: "music/parade_on_cleveland.mp3",
+      cover: "covers/parade.jpg",
+      lyrics: [
+        { time: 0, text: "Whoa" },
+        { time: 3, text: "How the fuck you out here goin' tit-for-tat?" },
+        { time: 6, text: "I shoulda saw the signs, how could I miss that?" },
+        { time: 9, text: "Ayy, soon as I'm fresh out the box like a Tic-Tac" },
+        { time: 12, text: "We havin' sex soon as I get my bitch back" },
+        { time: 15, text: "It ain't gon' be sexy when I get my lick back" },
+        { time: 18, text: "I'm about to mop up some boys, it's custodian time" },
+        { time: 21, text: "Me and my thoughts, is the loneliest time" }
+        // (truncated for brevity, you can add more lines if needed)
+      ]
+    }
+  ];
+
+  let currentSong = 0;
+  const audio = document.getElementById("audio");
+  const cover = document.getElementById("cover");
+  const songName = document.getElementById("songName");
+  const lyricsDiv = document.getElementById("lyrics");
+
+  function loadSong(index) {
+    const song = songs[index];
+    audio.src = song.src;
+    cover.style.backgroundImage = `url('${song.cover}')`;
+    songName.textContent = song.name;
+
+    lyricsDiv.innerHTML = "";
+    song.lyrics.forEach(line => {
+      const span = document.createElement("span");
+      span.textContent = line.text;
+      span.dataset.time = line.time;
+      lyricsDiv.appendChild(span);
+    });
+  }
+
+  function togglePlay() {
+    if (audio.paused) {
+      audio.play();
+    } else {
+      audio.pause();
+    }
+  }
+
+  function nextSong() {
+    currentSong = (currentSong + 1) % songs.length;
+    loadSong(currentSong);
+    audio.play();
+  }
+
+  function prevSong() {
+    currentSong = (currentSong - 1 + songs.length) % songs.length;
+    loadSong(currentSong);
+    audio.play();
+  }
+
+  audio.addEventListener("timeupdate", () => {
+    const currentTime = audio.currentTime;
+    const lines = lyricsDiv.querySelectorAll("span");
+
+    lines.forEach(line => {
+      const time = Number(line.dataset.time);
+      if (currentTime >= time) {
+        lines.forEach(l => l.classList.remove("active"));
+        line.classList.add("active");
+      }
+    });
+  });
+
+  // Load first song on startup
+  loadSong(currentSong);
+</script>
+
+</body>
+</html>
