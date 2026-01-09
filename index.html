@@ -1,201 +1,282 @@
-<script>
-// ================= SECRET KEYPAD STATE (MUST BE FIRST) =================
-let secretActive = false;
-let keySequence = "";
-let typedKeys = "";
-const expectedCode = "150677";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harris Academy Morden</title>
+<link rel="icon" type="image/png" href="covers/icon.png">
 
-// ================= SONGS & PLAYLISTS =================
-const playlists = {
-  "Raghib's Playlist": [
-    {
-      name:"Daylight (Drake)",
-      src:"music/daylight_drake.mp3",
-      cover:"covers/daylight.jpg",
-      lyrics:[
-        {time:0,text:"Treat all my exes like Jehovah's Witnesses"},
-        {time:4,text:"Free all the dogs and fuck all the witnesses"}
-      ]
-    },
-    {
-      name:"Parade on Cleveland (Young Thug ft. Drake)",
-      src:"music/parade_on_cleveland.mp3",
-      cover:"covers/parade.jpg",
-      lyrics:[
-        {time:0,text:"Whoa"},
-        {time:3,text:"How the fuck you out here goin' tit-for-tat?"}
-      ]
-    }
+<style>
+:root {
+  --accent-color:#1db954;
+  --bg-image:url('covers/daylight.jpg');
+}
+body{
+  margin:0;font-family:Arial,Helvetica,sans-serif;
+  background:#000;color:white;
+  display:flex;justify-content:center;align-items:center;
+  min-height:100vh;
+}
+body::before{
+  content:"";position:fixed;inset:0;
+  background-image:var(--bg-image);
+  background-size:cover;background-position:center;
+  filter:blur(40px) brightness(0.45);
+  z-index:-1;
+}
+
+.player{
+  width:350px;height:600px;
+  background:#181818;border-radius:16px;
+  padding:20px;
+  display:flex;flex-direction:column;
+  box-shadow:0 20px 40px rgba(0,0,0,.6);
+}
+.title{text-align:center;font-size:1.4rem;margin-bottom:10px}
+.cover{width:100%;height:300px;background-size:cover;background-position:center;border-radius:12px}
+.song-name{text-align:center;margin:8px 0}
+.controls{display:flex;justify-content:space-between}
+button{
+  background:var(--accent-color);
+  border:none;color:black;
+  padding:10px 15px;
+  border-radius:50px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.lyrics{
+  flex:1;overflow-y:auto;
+  background:#101010;
+  border-radius:10px;
+  padding:10px;
+  margin:10px 0;
+}
+.lyrics span{display:block;color:#888;padding:5px;cursor:pointer}
+.lyrics span.active{color:var(--accent-color);font-weight:bold}
+.lyrics span.dragging{opacity:.5}
+
+.nav-buttons{display:flex;justify-content:space-around}
+
+/* Floating Island */
+.mini-bar{
+  position:fixed;
+  bottom:0;left:50%;
+  transform:translateX(-50%);
+  width:350px;
+  padding:10px;
+  display:flex;gap:10px;
+  align-items:center;
+  backdrop-filter:blur(25px) saturate(180%);
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:16px 16px 0 0;
+  opacity:0;
+  pointer-events:none;
+  transition:.4s;
+}
+.mini-bar.visible{opacity:1;pointer-events:auto}
+.mini-cover{width:50px;height:50px;border-radius:10px;background-size:cover}
+.progress-bar{height:5px;background:#333;border-radius:5px}
+.progress-fill{height:100%;width:0%;background:var(--accent-color)}
+.search-input{width:100%;padding:8px;border-radius:10px;border:none}
+
+/* Secret Screen */
+.secret-screen{
+  width:100%;height:100%;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  font-size:2rem;
+}
+.secret-code{letter-spacing:8px;margin-top:10px}
+</style>
+</head>
+
+<body>
+
+<div class="player" id="player">
+  <div class="title" id="pageTitle">🤬 Censored Music</div>
+  <div id="cover" class="cover"></div>
+  <div id="songName" class="song-name"></div>
+
+  <div class="controls" id="controls">
+    <button onclick="prevSong()">⏮</button>
+    <button onclick="togglePlay()">▶ / ⏸</button>
+    <button onclick="nextSong()">⏭</button>
+  </div>
+
+  <div class="lyrics" id="lyrics"></div>
+
+  <div class="nav-buttons">
+    <button onclick="switchPage('home')">🏝️</button>
+    <button onclick="switchPage('playlist')">💿</button>
+    <button onclick="switchPage('queue')">🎵</button>
+    <button onclick="switchPage('search')">🔍</button>
+  </div>
+</div>
+
+<div class="mini-bar" id="miniBar">
+  <div class="mini-cover" id="miniCover"></div>
+  <div style="flex:1">
+    <div id="miniSong"></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+  </div>
+  <button onclick="togglePlay()">▶</button>
+</div>
+
+<audio id="audio"></audio>
+
+<script>
+/* ================= MUSIC DATA ================= */
+const playlists={
+  "Raghib's Playlist":[
+    {name:"Daylight (Drake)",src:"music/daylight_drake.mp3",cover:"covers/daylight.jpg",lyrics:[
+      {time:0,text:"Treat all my exes like Jehovah's Witnesses"},
+      {time:4,text:"Free all the dogs and fuck all the witnesses"}
+    ]},
+    {name:"Parade on Cleveland",src:"music/parade_on_cleveland.mp3",cover:"covers/parade.jpg",lyrics:[]}
   ],
-  "Chill Vibes": [
-    {name:"Song A",src:"music/songA.mp3",cover:"covers/songA.jpg",lyrics:[]},
-    {name:"Song B",src:"music/songB.mp3",cover:"covers/songB.jpg",lyrics:[]}
+  "Chill Vibes":[
+    {name:"Song A",src:"music/songA.mp3",cover:"covers/songA.jpg",lyrics:[]}
   ]
 };
 
-let songs = playlists["Raghib's Playlist"];
-let currentSong = 0;
-let currentPage = 'home';
+let songs=playlists["Raghib's Playlist"];
+let currentSong=0;
+let currentPage="home";
 
-// ================= ELEMENTS =================
-const audio = document.getElementById("audio");
-const cover = document.getElementById("cover");
-const songName = document.getElementById("songName");
-const lyricsDiv = document.getElementById("lyrics");
-const pageTitle = document.getElementById("pageTitle");
-const songControls = document.getElementById("songControls");
-const miniBar = document.getElementById("miniBar");
-const miniCover = document.getElementById("miniCover");
-const miniSongName = document.getElementById("miniSongName");
-const progressFill = document.getElementById("progressFill");
+/* ================= ELEMENTS ================= */
+const audio=document.getElementById("audio");
+const cover=document.getElementById("cover");
+const songName=document.getElementById("songName");
+const lyrics=document.getElementById("lyrics");
+const miniBar=document.getElementById("miniBar");
+const miniCover=document.getElementById("miniCover");
+const miniSong=document.getElementById("miniSong");
+const progress=document.getElementById("progress");
+const player=document.getElementById("player");
 
-// ================= LOAD SONG =================
-function loadSong(index){
-  const song = songs[index];
-  audio.src = song.src;
-  cover.style.backgroundImage = `url('${song.cover}')`;
-  songName.textContent = song.name;
-  miniCover.style.backgroundImage = `url('${song.cover}')`;
-  miniSongName.textContent = song.name;
-  document.body.style.setProperty("--bg-image",`url('${song.cover}')`);
+/* ================= PLAYER ================= */
+function loadSong(i){
+  const s=songs[i];
+  audio.src=s.src;
+  cover.style.backgroundImage=`url(${s.cover})`;
+  miniCover.style.backgroundImage=`url(${s.cover})`;
+  songName.textContent=s.name;
+  miniSong.textContent=s.name;
+  document.body.style.setProperty("--bg-image",`url(${s.cover})`);
+  renderLyrics();
+}
+function togglePlay(){audio.paused?audio.play():audio.pause()}
+function nextSong(){currentSong=(currentSong+1)%songs.length;loadSong(currentSong);audio.play()}
+function prevSong(){currentSong=(currentSong-1+songs.length)%songs.length;loadSong(currentSong);audio.play()}
 
-  if(currentPage === 'home'){
-    lyricsDiv.innerHTML = "";
-    song.lyrics.forEach(line=>{
-      const span = document.createElement("span");
-      span.textContent = line.text;
-      span.dataset.time = line.time;
-      lyricsDiv.appendChild(span);
-    });
-  }
+audio.ontimeupdate=()=>{
+  progress.style.width=(audio.currentTime/audio.duration*100||0)+"%";
+  document.querySelectorAll(".lyrics span").forEach(l=>{
+    l.classList.toggle("active",audio.currentTime>=l.dataset.time);
+  });
+};
+
+function renderLyrics(){
+  lyrics.innerHTML="";
+  songs[currentSong].lyrics.forEach(l=>{
+    const s=document.createElement("span");
+    s.textContent=l.text;
+    s.dataset.time=l.time;
+    lyrics.appendChild(s);
+  });
 }
 
-// ================= CONTROLS =================
-function togglePlay(){ audio.paused ? audio.play() : audio.pause(); }
-function nextSong(){ currentSong=(currentSong+1)%songs.length; loadSong(currentSong); audio.play(); }
-function prevSong(){ currentSong=(currentSong-1+songs.length)%songs.length; loadSong(currentSong); audio.play(); }
-
-// ================= PROGRESS =================
-audio.addEventListener("timeupdate",()=>{
-  const progress = (audio.currentTime / audio.duration) * 100;
-  progressFill.style.width = isNaN(progress) ? "0%" : progress + "%";
-});
-
-// ================= QUEUE DRAG =================
-let dragSrcIndex=null;
-
+/* ================= QUEUE DRAG ================= */
 function renderQueue(){
-  lyricsDiv.innerHTML="";
+  lyrics.innerHTML="";
   songs.forEach((s,i)=>{
-    const span=document.createElement("span");
-    span.textContent=(i===currentSong?'➡ ':'')+s.name;
-    span.dataset.index=i;
-    span.draggable=true;
-    span.ondragstart=()=>dragSrcIndex=i;
-    span.ondragover=e=>e.preventDefault();
-    span.ondrop=()=>{
-      const moved=songs.splice(dragSrcIndex,1)[0];
-      songs.splice(i,0,moved);
+    const el=document.createElement("span");
+    el.textContent=s.name;
+    el.draggable=true;
+    el.dataset.i=i;
+    el.ondragstart=()=>el.classList.add("dragging");
+    el.ondragend=()=>el.classList.remove("dragging");
+    el.ondragover=e=>e.preventDefault();
+    el.ondrop=()=>{
+      const from=document.querySelector(".dragging").dataset.i;
+      songs.splice(i,0,songs.splice(from,1)[0]);
       renderQueue();
     };
-    lyricsDiv.appendChild(span);
+    lyrics.appendChild(el);
   });
 }
 
-// ================= PLAYLIST PAGES =================
-function showPlaylists(){
-  lyricsDiv.innerHTML="";
-  Object.keys(playlists).forEach(name=>{
-    const span=document.createElement("span");
-    span.textContent=name;
-    span.onclick=()=>showPlaylistSongs(name);
-    lyricsDiv.appendChild(span);
+/* ================= NAV ================= */
+function switchPage(p){
+  currentPage=p;
+  miniBar.classList.toggle("visible",p!=="home");
+
+  if(p==="home") renderLyrics();
+  if(p==="playlist"){
+    lyrics.innerHTML="";
+    Object.keys(playlists).forEach(name=>{
+      const s=document.createElement("span");
+      s.textContent=name;
+      s.onclick=()=>{songs=playlists[name];currentSong=0;loadSong(0);switchPage("home")};
+      lyrics.appendChild(s);
+    });
+  }
+  if(p==="queue") renderQueue();
+  if(p==="search"){
+    lyrics.innerHTML=`<input class="search-input" oninput="search(this.value)">`;
+  }
+}
+
+function search(q){
+  lyrics.innerHTML=`<input class="search-input" oninput="search(this.value)" value="${q}">`;
+  songs.filter(s=>s.name.toLowerCase().includes(q.toLowerCase()))
+  .forEach(s=>{
+    const el=document.createElement("span");
+    el.textContent=s.name;
+    lyrics.appendChild(el);
   });
 }
 
-function showPlaylistSongs(name){
-  songs = playlists[name];
-  currentSong = 0;
-  lyricsDiv.innerHTML="";
-  songs.forEach((s,i)=>{
-    const span=document.createElement("span");
-    span.textContent=s.name;
-    span.onclick=()=>{loadSong(i);audio.play();switchPage('home');};
-    lyricsDiv.appendChild(span);
-  });
-}
+/* ================= SECRET MODE ================= */
+let secretActive=false;
+let typed="";
+const code="150677";
+let buffer="";
 
-// ================= PAGE SWITCH =================
-function switchPage(page){
-  if(secretActive) return; // LOCK UI IN SECRET MODE
-  currentPage = page;
-
-  if(page==='home'){
-    pageTitle.textContent="🤬 Censored Music";
-    cover.style.display="block";
-    songName.style.display="block";
-    songControls.style.display="flex";
-    loadSong(currentSong);
-    miniBar.classList.remove("visible");
-  }
-
-  if(page==='album'){
-    pageTitle.textContent="💿 Playlist";
-    songControls.style.display="none";
-    showPlaylists();
-    miniBar.classList.add("visible");
-  }
-
-  if(page==='queue'){
-    pageTitle.textContent="🎵 Queue";
-    cover.style.display="none";
-    songName.style.display="none";
-    songControls.style.display="none";
-    renderQueue();
-    miniBar.classList.add("visible");
-  }
-}
-
-// ================= SECRET KEYPAD =================
 document.addEventListener("keydown",e=>{
-  const key=e.key.toLowerCase();
-  keySequence+=key;
-
-  if(keySequence.endsWith("secret")){
-    secretActive=!secretActive;
-    keySequence="";
-    typedKeys="";
-    secretActive ? activateSecretKeypad() : deactivateSecretKeypad();
+  buffer+=e.key.toLowerCase();
+  if(buffer.endsWith("secret")){
+    toggleSecret();
+    buffer="";
   }
-
-  if(secretActive && !isNaN(key)){
-    typedKeys+=key;
-    updateKeypadDisplay(typedKeys);
-    if(typedKeys===expectedCode){
-      document.getElementById("keypadDisplay").textContent="🎉 Secret Unlocked 🎉";
-      typedKeys="";
-    }
+  if(secretActive && !isNaN(e.key)){
+    typed+=e.key;
+    updateSecret();
   }
 });
 
-function activateSecretKeypad(){
-  cover.style.display="none";
-  songName.style.display="none";
-  songControls.style.display="none";
-  lyricsDiv.innerHTML=`<div id="keypadDisplay" style="font-size:2rem;text-align:center;">Enter code</div>`;
+function toggleSecret(){
+  secretActive=!secretActive;
+  if(secretActive){
+    player.innerHTML=`
+      <div class="secret-screen">
+        <div>Enter Code</div>
+        <div class="secret-code" id="secretCode"></div>
+      </div>`;
+  }else location.reload();
 }
 
-function deactivateSecretKeypad(){
-  loadSong(currentSong);
-  switchPage("home");
+function updateSecret(){
+  const el=document.getElementById("secretCode");
+  el.textContent="•".repeat(typed.length);
+  if(typed===code) el.textContent="✅ UNLOCKED";
+  if(typed.length>code.length) typed="";
 }
 
-function updateKeypadDisplay(v){
-  const d=document.getElementById("keypadDisplay");
-  if(d) d.textContent=v||"Enter code";
-}
-
-// ================= INIT =================
-loadSong(currentSong);
-switchPage("home");
+/* ================= INIT ================= */
+loadSong(0);
 </script>
+
+</body>
+</html>
