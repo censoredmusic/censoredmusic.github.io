@@ -41,6 +41,8 @@ button:hover { opacity:0.85; }
 .lyrics span.active { color: var(--accent-color); font-weight:bold; }
 .lyrics span.dragging { opacity:0.5; }
 .nav-buttons { display:flex; justify-content:space-around; margin-top:5px; flex-shrink:0; }
+
+/* Mini Floating Bar */
 .mini-bar {
   position: fixed; bottom:0; left:50%; transform:translateX(-50%);
   width:350px; border-radius:16px 16px 0 0; padding:10px;
@@ -54,12 +56,14 @@ button:hover { opacity:0.85; }
 }
 .mini-bar.visible { opacity:1; pointer-events:auto; animation: fadeIn 0.6s ease; }
 @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+
 .mini-cover { width:50px; height:50px; background-size:cover; border-radius:10px; margin-right:10px; flex-shrink:0; }
 .mini-info { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 .mini-info span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .mini-controls button { padding:5px 10px; }
 .progress-bar { width:100%; height:5px; background:#333; border-radius:5px; margin-top:2px; }
 .progress-fill { height:100%; background:var(--accent-color); border-radius:5px; width:0%; }
+
 .search-input { width:100%; padding:8px; border-radius:10px; border:none; margin-bottom:10px; font-size:1rem; }
 </style>
 </head>
@@ -108,7 +112,6 @@ const songs=[
 
 let currentSong=0;
 let currentPage='home';
-let visitedOther=false;
 
 const audio=document.getElementById("audio");
 const cover=document.getElementById("cover");
@@ -171,29 +174,12 @@ function extractAccentColor(imageSrc){
   };
 }
 
-// ---------- Drag & Drop helpers for queue ----------
+// Drag & Drop Queue
 let dragSrcIndex=null;
 
-function handleDragStart(e){
-  dragSrcIndex=Number(this.dataset.index);
-  this.classList.add('dragging');
-}
-
+function handleDragStart(e){ dragSrcIndex=Number(this.dataset.index); this.classList.add('dragging'); }
 function handleDragOver(e){ e.preventDefault(); }
-
-function handleDrop(e){
-  e.stopPropagation();
-  const targetIndex=Number(this.dataset.index);
-  if(dragSrcIndex===null || dragSrcIndex===targetIndex) return;
-
-  // reorder songs array
-  const moved=songs.splice(dragSrcIndex,1)[0];
-  songs.splice(targetIndex,0,moved);
-
-  // reload queue
-  renderQueue();
-}
-
+function handleDrop(e){ e.stopPropagation(); const targetIndex=Number(this.dataset.index); if(dragSrcIndex===null||dragSrcIndex===targetIndex) return; const moved=songs.splice(dragSrcIndex,1)[0]; songs.splice(targetIndex,0,moved); renderQueue(); }
 function handleDragEnd(){ this.classList.remove('dragging'); }
 
 function renderQueue(){
@@ -211,16 +197,14 @@ function renderQueue(){
   });
 }
 
-// ---------- Page switching ----------
+// Page Switching
 function switchPage(page){
   currentPage=page;
-  if(page!=='home')visitedOther=true;
 
   if(page==='home'){
     pageTitle.textContent="🤬 Censored Music";
     cover.style.display="block"; songName.style.display="block"; songControls.style.display="flex"; lyricsDiv.style.display="block";
-    if(visitedOther){ miniBar.classList.add('visible'); cover.classList.add('frosted'); } 
-    else { miniBar.classList.remove('visible'); cover.classList.remove('frosted'); }
+    miniBar.classList.remove('visible'); // Hide mini bar on home
   } else if(page==='album'){
     pageTitle.textContent="💿 Playlist";
     cover.style.display="block"; songName.style.display="block"; songControls.style.display="none"; lyricsDiv.innerHTML="";
@@ -231,17 +215,19 @@ function switchPage(page){
       lyricsDiv.appendChild(span);
     });
     lyricsDiv.style.display="block";
+    miniBar.classList.add('visible');
   } else if(page==='queue'){
     pageTitle.textContent="🎵 Queue Page";
     cover.style.display="none"; songName.style.display="none"; songControls.style.display="none";
-    renderQueue();
-    lyricsDiv.style.display="block";
+    renderQueue(); lyricsDiv.style.display="block";
+    miniBar.classList.add('visible');
   } else if(page==='search'){
     pageTitle.textContent="🔍 Search";
     cover.style.display="none"; songName.style.display="none"; songControls.style.display="none";
     lyricsDiv.innerHTML=`<input class="search-input" id="searchInput" placeholder="Search songs..." oninput="filterSongs()"><div id="searchResults"></div>`;
     document.getElementById("searchResults").innerHTML=songs.map((s,i)=>`<span onclick="playFromSearch(${i})">${s.name}</span>`).join("");
     lyricsDiv.style.display="block";
+    miniBar.classList.add('visible');
   }
 }
 
@@ -253,7 +239,7 @@ function filterSongs(){
 
 function playFromSearch(index){currentSong=index;loadSong(currentSong);audio.play();switchPage('home');}
 
-// ---------- Init ----------
+// Init
 loadSong(currentSong);
 switchPage('home');
 </script>
