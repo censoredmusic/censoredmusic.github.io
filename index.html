@@ -135,13 +135,15 @@ function loadSong(index){
   extractAccentColor(song.cover);
 
   // load lyrics
-  lyricsDiv.innerHTML="";
-  song.lyrics.forEach(line=>{
-    const span=document.createElement("span");
-    span.textContent=line.text;
-    span.dataset.time=line.time;
-    lyricsDiv.appendChild(span);
-  });
+  if(currentPage==='home'){
+    lyricsDiv.innerHTML="";
+    song.lyrics.forEach(line=>{
+      const span=document.createElement("span");
+      span.textContent=line.text;
+      span.dataset.time=line.time;
+      lyricsDiv.appendChild(span);
+    });
+  }
 }
 
 function togglePlay(){if(audio.paused)audio.play();else audio.pause();}
@@ -176,7 +178,6 @@ function extractAccentColor(imageSrc){
 
 // Drag & Drop Queue
 let dragSrcIndex=null;
-
 function handleDragStart(e){ dragSrcIndex=Number(this.dataset.index); this.classList.add('dragging'); }
 function handleDragOver(e){ e.preventDefault(); }
 function handleDrop(e){ e.stopPropagation(); const targetIndex=Number(this.dataset.index); if(dragSrcIndex===null||dragSrcIndex===targetIndex) return; const moved=songs.splice(dragSrcIndex,1)[0]; songs.splice(targetIndex,0,moved); renderQueue(); }
@@ -203,8 +204,16 @@ function switchPage(page){
 
   if(page==='home'){
     pageTitle.textContent="🤬 Censored Music";
-    cover.style.display="block"; songName.style.display="block"; songControls.style.display="flex"; lyricsDiv.style.display="block";
-    miniBar.classList.remove('visible'); // Hide mini bar on home
+    cover.style.display="block"; songName.style.display="block"; songControls.style.display="flex"; 
+    // Clear lyricsDiv and load current song lyrics
+    lyricsDiv.innerHTML="";
+    songs[currentSong].lyrics.forEach(line=>{
+      const span=document.createElement("span");
+      span.textContent=line.text;
+      span.dataset.time=line.time;
+      lyricsDiv.appendChild(span);
+    });
+    miniBar.classList.remove('visible');
   } else if(page==='album'){
     pageTitle.textContent="💿 Playlist";
     cover.style.display="block"; songName.style.display="block"; songControls.style.display="none"; lyricsDiv.innerHTML="";
@@ -245,3 +254,4 @@ switchPage('home');
 </script>
 </body>
 </html>
+
