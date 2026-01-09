@@ -31,32 +31,29 @@ body::before {
   transition:all 0.3s;
 }
 .title { text-align:center; font-size:1.4rem; margin-bottom:10px; }
-.cover {
-  width:100%; height:300px; background-size:cover;
-  background-position:center; border-radius:12px;
-  margin-bottom:10px; flex-shrink:0;
-}
+.cover { width:100%; height:300px; background-size:cover; background-position:center; border-radius:12px; margin-bottom:10px; flex-shrink:0; }
 .song-name { text-align:center; font-size:1.1rem; margin-bottom:10px; flex-shrink:0; }
 .controls { display:flex; justify-content:space-between; align-items:center; margin:10px 0; flex-shrink:0; }
-button {
-  background:var(--accent-color); border:none; color:black;
-  padding:10px 15px; border-radius:50px; font-weight:bold;
-  cursor:pointer; transition:0.2s;
-}
+button { background:var(--accent-color); border:none; color:black; padding:10px 15px; border-radius:50px; font-weight:bold; cursor:pointer; transition:0.2s; }
 button:hover { opacity:0.85; }
-.lyrics {
-  flex:1; overflow-y:auto; background:#101010;
-  padding:10px; border-radius:10px; font-size:0.9rem; line-height:1.4; margin-bottom:10px;
-}
-.lyrics span { color:#888; display:block; }
+.lyrics { flex:1; overflow-y:auto; background:#101010; padding:10px; border-radius:10px; font-size:0.9rem; line-height:1.4; margin-bottom:10px; }
+.lyrics span { color:#888; display:block; padding:5px; cursor:pointer; }
 .lyrics span.active { color: var(--accent-color); font-weight:bold; }
+.lyrics span.dragging { opacity:0.5; }
 .nav-buttons { display:flex; justify-content:space-around; margin-top:5px; flex-shrink:0; }
 .mini-bar {
   position: fixed; bottom:0; left:50%; transform:translateX(-50%);
-  width:350px; background:#181818; border-radius:16px 16px 0 0;
-  padding:10px; display:flex; align-items:center; justify-content:space-between;
+  width:350px; border-radius:16px 16px 0 0; padding:10px;
+  display:flex; align-items:center; justify-content:space-between;
   box-shadow:0 -5px 15px rgba(0,0,0,0.5);
+  backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.2);
+  opacity:0; pointer-events:none;
+  transition: opacity 0.5s;
 }
+.mini-bar.visible { opacity:1; pointer-events:auto; animation: fadeIn 0.6s ease; }
+@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
 .mini-cover { width:50px; height:50px; background-size:cover; border-radius:10px; margin-right:10px; flex-shrink:0; }
 .mini-info { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 .mini-info span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -64,13 +61,6 @@ button:hover { opacity:0.85; }
 .progress-bar { width:100%; height:5px; background:#333; border-radius:5px; margin-top:2px; }
 .progress-fill { height:100%; background:var(--accent-color); border-radius:5px; width:0%; }
 .search-input { width:100%; padding:8px; border-radius:10px; border:none; margin-bottom:10px; font-size:1rem; }
-.frosted {
-  backdrop-filter: blur(10px) brightness(1.2);
-  background: rgba(255,255,255,0.1);
-  border-radius:12px;
-  animation: fadeIn 0.6s ease;
-}
-@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
 </style>
 </head>
 <body>
@@ -126,6 +116,7 @@ const songName=document.getElementById("songName");
 const lyricsDiv=document.getElementById("lyrics");
 const pageTitle=document.getElementById("pageTitle");
 const songControls=document.getElementById("songControls");
+const miniBar=document.getElementById("miniBar");
 const miniCover=document.getElementById("miniCover");
 const miniSongName=document.getElementById("miniSongName");
 const progressFill=document.getElementById("progressFill");
@@ -140,6 +131,7 @@ function loadSong(index){
   document.body.style.setProperty("--bg-image",`url('${song.cover}')`);
   extractAccentColor(song.cover);
 
+  // load lyrics
   lyricsDiv.innerHTML="";
   song.lyrics.forEach(line=>{
     const span=document.createElement("span");
@@ -152,6 +144,7 @@ function loadSong(index){
 function togglePlay(){if(audio.paused)audio.play();else audio.pause();}
 function nextSong(){currentSong=(currentSong+1)%songs.length;loadSong(currentSong);audio.play();}
 function prevSong(){currentSong=(currentSong-1+songs.length)%songs.length;loadSong(currentSong);audio.play();}
+
 audio.addEventListener("timeupdate",()=>{
   const currentTime=audio.currentTime;
   const lines=lyricsDiv.querySelectorAll("span");
@@ -178,35 +171,70 @@ function extractAccentColor(imageSrc){
   };
 }
 
+// ---------- Drag & Drop helpers for queue ----------
+let dragSrcIndex=null;
+
+function handleDragStart(e){
+  dragSrcIndex=Number(this.dataset.index);
+  this.classList.add('dragging');
+}
+
+function handleDragOver(e){ e.preventDefault(); }
+
+function handleDrop(e){
+  e.stopPropagation();
+  const targetIndex=Number(this.dataset.index);
+  if(dragSrcIndex===null || dragSrcIndex===targetIndex) return;
+
+  // reorder songs array
+  const moved=songs.splice(dragSrcIndex,1)[0];
+  songs.splice(targetIndex,0,moved);
+
+  // reload queue
+  renderQueue();
+}
+
+function handleDragEnd(){ this.classList.remove('dragging'); }
+
+function renderQueue(){
+  lyricsDiv.innerHTML="";
+  songs.forEach((s,i)=>{
+    const span=document.createElement("span");
+    span.textContent=(i===currentSong?'➡ ':'')+s.name;
+    span.dataset.index=i;
+    span.draggable=true;
+    span.addEventListener('dragstart', handleDragStart);
+    span.addEventListener('dragover', handleDragOver);
+    span.addEventListener('drop', handleDrop);
+    span.addEventListener('dragend', handleDragEnd);
+    lyricsDiv.appendChild(span);
+  });
+}
+
+// ---------- Page switching ----------
 function switchPage(page){
   currentPage=page;
   if(page!=='home')visitedOther=true;
 
   if(page==='home'){
     pageTitle.textContent="🤬 Censored Music";
-    if(visitedOther)cover.classList.add('frosted'); else cover.classList.remove('frosted');
     cover.style.display="block"; songName.style.display="block"; songControls.style.display="flex"; lyricsDiv.style.display="block";
+    if(visitedOther){ miniBar.classList.add('visible'); cover.classList.add('frosted'); } 
+    else { miniBar.classList.remove('visible'); cover.classList.remove('frosted'); }
   } else if(page==='album'){
     pageTitle.textContent="💿 Playlist";
     cover.style.display="block"; songName.style.display="block"; songControls.style.display="none"; lyricsDiv.innerHTML="";
     songs.forEach((s,i)=>{
       const span=document.createElement("span");
-      span.textContent=s.name;
-      span.style.cursor='pointer';
-      span.onclick=()=>{currentSong=i;loadSong(currentSong);audio.play();switchPage('home');};
+      span.textContent=s.name; span.style.cursor='pointer';
+      span.onclick=()=>{currentSong=i; loadSong(currentSong); audio.play(); switchPage('home');};
       lyricsDiv.appendChild(span);
     });
     lyricsDiv.style.display="block";
   } else if(page==='queue'){
     pageTitle.textContent="🎵 Queue Page";
     cover.style.display="none"; songName.style.display="none"; songControls.style.display="none";
-    lyricsDiv.innerHTML="";
-    // reorder: current song top, upcoming below
-    songs.slice(currentSong).concat(songs.slice(0,currentSong)).forEach((s,i)=>{
-      const span=document.createElement("span");
-      span.textContent=(i===0?'➡ ':'')+s.name;
-      lyricsDiv.appendChild(span);
-    });
+    renderQueue();
     lyricsDiv.style.display="block";
   } else if(page==='search'){
     pageTitle.textContent="🔍 Search";
@@ -225,6 +253,7 @@ function filterSongs(){
 
 function playFromSearch(index){currentSong=index;loadSong(currentSong);audio.play();switchPage('home');}
 
+// ---------- Init ----------
 loadSong(currentSong);
 switchPage('home');
 </script>
