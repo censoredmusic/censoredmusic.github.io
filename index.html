@@ -65,6 +65,24 @@ button:hover { opacity:0.85; }
 .progress-fill { height:100%; background:var(--accent-color); border-radius:5px; width:0%; }
 
 .search-input { width:100%; padding:8px; border-radius:10px; border:none; margin-bottom:10px; font-size:1rem; }
+
+/* Secret screen styles */
+.secret-screen {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:100%; width:100%; text-align:center;
+}
+.secret-screen div { margin:5px 0; font-size:1.2rem; }
+.secret-code { font-size:1.5rem; letter-spacing:5px; margin-bottom:20px; }
+.keypad {
+  display:grid; grid-template-columns:repeat(3, 60px); gap:15px;
+}
+.keypad button {
+  width:60px; height:60px; border-radius:50%; font-size:1.2rem;
+  background:#333; color:white; border:none; cursor:pointer;
+  display:flex; justify-content:center; align-items:center;
+  transition:0.2s;
+}
+.keypad button:hover { background:var(--accent-color); color:black; }
 </style>
 </head>
 <body>
@@ -272,21 +290,18 @@ function filterSongs(){
 }
 
 function playFromSearch(index){currentSong=index;loadSong(currentSong);audio.play();switchPage('home');}
-/* ================= SECRET MODE ================= */
+
+// ---- SECRET CODE FEATURE ----
 let secretActive=false;
 let typed="";
 const code="150677";
 let buffer="";
 
-document.addEventListener("keydown",e=>{
+document.addEventListener("keydown", e=>{
   buffer+=e.key.toLowerCase();
   if(buffer.endsWith("secret")){
     toggleSecret();
     buffer="";
-  }
-  if(secretActive && !isNaN(e.key)){
-    typed+=e.key;
-    updateSecret();
   }
 });
 
@@ -297,8 +312,17 @@ function toggleSecret(){
       <div class="secret-screen">
         <div>Enter Code</div>
         <div class="secret-code" id="secretCode"></div>
+        <div class="keypad" id="keypad">
+          ${[1,2,3,4,5,6,7,8,9,'',0,''].map(n=>`<button onclick="pressKey('${n}')">${n}</button>`).join('')}
+        </div>
       </div>`;
-  }else location.reload();
+  } else location.reload();
+}
+
+function pressKey(n){
+  if(n==='') return;
+  typed+=n;
+  updateSecret();
 }
 
 function updateSecret(){
@@ -308,9 +332,12 @@ function updateSecret(){
   if(typed.length>code.length) typed="";
 }
 
+// ---- END SECRET FEATURE ----
+
 // Init
 loadSong(currentSong);
 switchPage('home');
 </script>
 </body>
 </html>
+
