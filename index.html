@@ -1,268 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Harris Academy Morden</title>
-<link rel="icon" type="image/png" href="covers/icon.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🤬Censored Music</title>
+  <link rel="icon" type="image/png" href="covers/icon.png">
 
-<style>
-:root {
-  --accent-color: #1db954;
-}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #000;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      transition: background 0.5s;
+    }
 
-body {
-  margin: 0;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #000;
-  color: white;
-  font-family: Arial, sans-serif;
-}
+    .player {
+      width: 350px;
+      background: #181818;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      transition: all 0.5s;
+    }
 
-.player {
-  width: 360px;
-  height: 600px;
-  background: #111;
-  border-radius: 22px;
-  overflow: hidden;
-  position: relative;
-}
+    .title {
+      text-align: center;
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+    }
 
-.pages {
-  display: flex;
-  width: 200%;
-  height: 100%;
-  transition: transform 0.4s ease;
-}
+    .cover {
+      width: 100%;
+      height: 300px;
+      background-size: cover;
+      background-position: center;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
 
-.page {
-  width: 100%;
-  padding: 20px;
-  box-sizing: border-box;
-}
+    .song-name {
+      text-align: center;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
 
-/* PAGE DOTS */
-.dots {
-  position: absolute;
-  top: 12px;
-  right: 15px;
-  display: flex;
-  gap: 6px;
-}
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 15px 0;
+    }
 
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #555;
-  cursor: pointer;
-}
+    button {
+      background: #1db954;
+      border: none;
+      color: black;
+      padding: 10px 15px;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
 
-.dot.active {
-  background: var(--accent-color);
-}
+    button:hover {
+      opacity: 0.85;
+    }
 
-/* NOW PLAYING */
-.cover {
-  width: 100%;
-  border-radius: 14px;
-}
+    .lyrics {
+      height: 150px;
+      overflow-y: auto;
+      background: #101010;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
 
-.song-title {
-  font-size: 18px;
-  margin-top: 15px;
-  font-weight: bold;
-}
+    .lyrics span {
+      color: #888;
+      display: block;
+    }
 
-.controls {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 20px;
-}
+    .lyrics span.active {
+      color: var(--accent-color);
+      font-weight: bold;
+    }
 
-button {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 22px;
-  cursor: pointer;
-}
+    .nav-buttons {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 15px;
+    }
 
-/* QUEUE */
-.queue-list {
-  max-height: 520px;
-  overflow-y: auto;
-}
-
-.queue-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  margin-bottom: 8px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 10px;
-  cursor: grab;
-}
-
-.queue-item.dragging {
-  opacity: 0.4;
-}
-
-.queue-item img {
-  width: 45px;
-  height: 45px;
-  border-radius: 8px;
-  object-fit: cover;
-}
-
-.queue-item .title {
-  font-size: 14px;
-  font-weight: bold;
-}
-</style>
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: var(--bg-image);
+      background-size: cover;
+      background-position: center;
+      filter: blur(40px) brightness(0.5);
+      z-index: -1;
+      transition: 0.5s;
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="player">
+  <div class="player" id="player">
+    <div class="title" id="pageTitle">Harris Academy Morden</div>
 
-  <!-- DOTS -->
-  <div class="dots">
-    <div class="dot active" onclick="goPage(0)"></div>
-    <div class="dot" onclick="goPage(1)"></div>
-  </div>
+    <div id="cover" class="cover"></div>
 
-  <div class="pages" id="pages">
+    <div id="songName" class="song-name"></div>
 
-    <!-- NOW PLAYING PAGE -->
-    <div class="page">
-      <img id="cover" class="cover">
-      <div class="song-title" id="title"></div>
-
-      <div class="controls">
-        <button onclick="prevSong()">⏮</button>
-        <button onclick="togglePlay()">▶️</button>
-        <button onclick="nextSong()">⏭</button>
-      </div>
+    <div class="controls" id="songControls">
+      <button onclick="prevSong()">⏮ Back</button>
+      <button onclick="togglePlay()">▶ / ⏸</button>
+      <button onclick="nextSong()">Next ⏭</button>
     </div>
 
-    <!-- QUEUE PAGE -->
-    <div class="page">
-      <h3>Queue</h3>
-      <div class="queue-list" id="queueList"></div>
+    <div id="lyrics" class="lyrics"></div>
+
+    <div class="nav-buttons">
+      <button onclick="switchPage('home')">🏝️ Home</button>
+      <button onclick="switchPage('album')">💿 Album</button>
+      <button onclick="switchPage('queue')">🎵 Queue</button>
     </div>
 
+    <audio id="audio"></audio>
   </div>
-</div>
-
-<audio id="audio"></audio>
 
 <script>
-const pages = document.getElementById("pages");
-const dots = document.querySelectorAll(".dot");
-
-function goPage(i) {
-  pages.style.transform = `translateX(-${i * 50}%)`;
-  dots.forEach(d => d.classList.remove("active"));
-  dots[i].classList.add("active");
-}
-
-/* SONG DATA */
 const songs = [
   {
-    title: "Daylight",
-    artist: "Drake",
-    file: "music/daylight.mp3",
-    cover: "covers/daylight.jpg"
+    name: "Daylight (Drake)",
+    src: "music/daylight_drake.mp3",
+    cover: "covers/daylight.jpg",
+    lyrics: [
+      { time: 0, text: "Treat all my exes like Jehovah's Witnesses" },
+      { time: 4, text: "Free all the dogs and fuck all the witnesses" },
+      { time: 8, text: "They sittin' down, we standin' on business" },
+      { time: 12, text: "Ayy, standin' on business" }
+    ]
   },
   {
-    title: "Parade on Cleveland",
-    artist: "Young Thug ft Drake",
-    file: "music/parade.mp3",
-    cover: "covers/parade.jpg"
+    name: "Parade on Cleveland (Young Thug ft. Drake)",
+    src: "music/parade_on_cleveland.mp3",
+    cover: "covers/parade.jpg",
+    lyrics: [
+      { time: 0, text: "Whoa" },
+      { time: 3, text: "How the fuck you out here goin' tit-for-tat?" },
+      { time: 6, text: "I shoulda saw the signs, how could I miss that?" }
+    ]
   }
 ];
 
-let queue = [...songs];
-let currentIndex = 0;
-
+let currentSong = 0;
+let currentPage = 'home';
 const audio = document.getElementById("audio");
-const titleEl = document.getElementById("title");
-const coverEl = document.getElementById("cover");
+const cover = document.getElementById("cover");
+const songName = document.getElementById("songName");
+const lyricsDiv = document.getElementById("lyrics");
+const pageTitle = document.getElementById("pageTitle");
+const songControls = document.getElementById("songControls");
 
-function loadSong(song) {
-  titleEl.textContent = song.title;
-  coverEl.src = song.cover;
-  audio.src = song.file;
-}
+function loadSong(index) {
+  const song = songs[index];
+  audio.src = song.src;
+  cover.style.backgroundImage = `url('${song.cover}')`;
+  songName.textContent = song.name;
 
-loadSong(queue[0]);
+  document.body.style.setProperty("--bg-image", `url('${song.cover}')`);
+  extractAccentColor(song.cover);
 
-function togglePlay() {
-  audio.paused ? audio.play() : audio.pause();
-}
-
-function nextSong() {
-  queue.push(queue.shift());
-  loadSong(queue[0]);
-  audio.play();
-  renderQueue();
-}
-
-function prevSong() {
-  queue.unshift(queue.pop());
-  loadSong(queue[0]);
-  audio.play();
-  renderQueue();
-}
-
-audio.addEventListener("ended", nextSong);
-
-/* QUEUE RENDER + DRAG */
-const queueList = document.getElementById("queueList");
-let dragIndex = null;
-
-function renderQueue() {
-  queueList.innerHTML = "";
-  queue.forEach((song, i) => {
-    const item = document.createElement("div");
-    item.className = "queue-item";
-    item.draggable = true;
-    item.dataset.index = i;
-
-    item.innerHTML = `
-      <img src="${song.cover}">
-      <div class="title">${song.title}</div>
-    `;
-
-    item.addEventListener("dragstart", () => {
-      dragIndex = i;
-      item.classList.add("dragging");
-    });
-
-    item.addEventListener("dragend", () => {
-      item.classList.remove("dragging");
-    });
-
-    item.addEventListener("dragover", e => e.preventDefault());
-
-    item.addEventListener("drop", () => {
-      const dragged = queue.splice(dragIndex, 1)[0];
-      queue.splice(i, 0, dragged);
-      renderQueue();
-    });
-
-    queueList.appendChild(item);
+  lyricsDiv.innerHTML = "";
+  song.lyrics.forEach(line => {
+    const span = document.createElement("span");
+    span.textContent = line.text;
+    span.dataset.time = line.time;
+    lyricsDiv.appendChild(span);
   });
 }
 
-renderQueue();
-</script>
+function togglePlay() {
+  if (audio.paused) audio.play();
+  else audio.pause();
+}
 
+function nextSong() {
+  currentSong = (currentSong + 1) % songs.length;
+  loadSong(currentSong);
+  audio.play();
+}
+
+function prevSong() {
+  currentSong = (currentSong - 1 + songs.length) % songs.length;
+  loadSong(currentSong);
+  audio.play();
+}
+
+audio.addEventListener("timeupdate", () => {
+  const currentTime = audio.currentTime;
+  const lines = lyricsDiv.querySelectorAll("span");
+  lines.forEach(line => {
+    const time = Number(line.dataset.time);
+    if (currentTime >= time) {
+      lines.forEach(l => l.classList.remove("active"));
+      line.classList.add("active");
+    }
+  });
+});
+
+function extractAccentColor(imageSrc) {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = imageSrc;
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = img.width; canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let r = 0, g = 0, b = 0, count = 0;
+    for (let i = 0; i < data.length; i += 40) {
+      r += data[i]; g += data[i+1]; b += data[i+2]; count++;
+    }
+    r = Math.floor(r/count); g = Math.floor(g/count); b = Math.floor(b/count);
+    document.documentElement.style.setProperty("--accent-color", `rgb(${r},${g},${b})`);
+  };
+}
+
+function switchPage(page) {
+  currentPage = page;
+  if (page === 'home') {
+    pageTitle.textContent = "🏝️ Floating Island";
+    cover.style.display = "block";
+    songName.style.display = "block";
+    songControls.style.display = "flex";
+    lyricsDiv.style.display = "block";
+  } else if (page === 'album') {
+    pageTitle.textContent = "💿 Album Page";
+    cover.style.display = "block";
+    songName.style.display = "block";
+    songControls.style.display = "none";
+    lyricsDiv.style.display = "none";
+  } else if (page === 'queue') {
+    pageTitle.textContent = "🎵 Queue Page";
+    cover.style.display = "none";
+    songName.style.display = "none";
+    songControls.style.display = "none";
+    lyricsDiv.innerHTML = songs.map(s => `<span>${s.name}</span>`).join("");
+    lyricsDiv.style.display = "block";
+  }
+}
+
+// Load first song on startup
+loadSong(currentSong);
+switchPage('home');
+</script>
 </body>
 </html>
-
-
