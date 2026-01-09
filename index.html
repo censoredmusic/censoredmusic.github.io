@@ -65,6 +65,24 @@ button:hover { opacity:0.85; }
 .progress-fill { height:100%; background:var(--accent-color); border-radius:5px; width:0%; }
 
 .search-input { width:100%; padding:8px; border-radius:10px; border:none; margin-bottom:10px; font-size:1rem; }
+
+/* Secret screen styles */
+.secret-screen {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  height:100%; width:100%; text-align:center;
+}
+.secret-screen div { margin:5px 0; font-size:1.2rem; }
+.secret-code { font-size:1.5rem; letter-spacing:5px; margin-bottom:20px; }
+.keypad {
+  display:grid; grid-template-columns:repeat(3, 60px); gap:15px;
+}
+.keypad button {
+  width:60px; height:60px; border-radius:50%; font-size:1.2rem;
+  background:#333; color:white; border:none; cursor:pointer;
+  display:flex; justify-content:center; align-items:center;
+  transition:0.2s;
+}
+.keypad button:hover { background:var(--accent-color); color:black; }
 </style>
 </head>
 <body>
@@ -90,6 +108,7 @@ button:hover { opacity:0.85; }
   </div>
 </div>
 
+<!-- Mini Floating Bar -->
 <div class="mini-bar" id="miniBar">
   <div class="mini-cover" id="miniCover"></div>
   <div class="mini-info">
@@ -104,7 +123,7 @@ button:hover { opacity:0.85; }
 <audio id="audio"></audio>
 
 <script>
-// --- SONGS & PLAYLIST LOGIC (unchanged)
+// Songs and Multiple Playlists
 const playlists = {
   "Raghib's Playlist": [
     {name:"Daylight (Drake)",src:"music/daylight_drake.mp3",cover:"covers/daylight.jpg",lyrics:[{time:0,text:"Treat all my exes like Jehovah's Witnesses"},{time:4,text:"Free all the dogs and fuck all the witnesses"}]},
@@ -116,6 +135,7 @@ const playlists = {
   ]
 };
 
+// Default songs array for Home / Queue
 let songs = playlists["Raghib's Playlist"];
 let currentSong=0;
 let currentPage='home';
@@ -131,7 +151,7 @@ const miniCover=document.getElementById("miniCover");
 const miniSongName=document.getElementById("miniSongName");
 const progressFill=document.getElementById("progressFill");
 
-// --- LOAD & PLAY SONGS ---
+// Load a song
 function loadSong(index){
   const song=songs[index];
   audio.src=song.src;
@@ -153,11 +173,12 @@ function loadSong(index){
   }
 }
 
+// Play / Pause
 function togglePlay(){if(audio.paused)audio.play();else audio.pause();}
 function nextSong(){currentSong=(currentSong+1)%songs.length;loadSong(currentSong);audio.play();}
 function prevSong(){currentSong=(currentSong-1+songs.length)%songs.length;loadSong(currentSong);audio.play();}
 
-// --- PROGRESS BAR & LYRICS ---
+// Progress bar & lyrics highlighting
 audio.addEventListener("timeupdate",()=>{
   const currentTime=audio.currentTime;
   const lines=lyricsDiv.querySelectorAll("span");
@@ -169,7 +190,7 @@ audio.addEventListener("timeupdate",()=>{
   progressFill.style.width=isNaN(progress)?'0%':progress+'%';
 });
 
-// --- ACCENT COLOR EXTRACTION ---
+// Accent color extraction
 function extractAccentColor(imageSrc){
   const img=new Image(); img.crossOrigin="anonymous"; img.src=imageSrc;
   img.onload=()=>{
@@ -185,7 +206,7 @@ function extractAccentColor(imageSrc){
   };
 }
 
-// --- DRAG & DROP QUEUE ---
+// Drag & Drop Queue
 let dragSrcIndex=null;
 function handleDragStart(e){ dragSrcIndex=Number(this.dataset.index); this.classList.add('dragging'); }
 function handleDragOver(e){ e.preventDefault(); }
@@ -207,23 +228,113 @@ function renderQueue(){
   });
 }
 
-// --- PLAYLIST & SEARCH ---
-function showPlaylists(){ lyricsDiv.innerHTML=""; Object.keys(playlists).forEach(plistName=>{ const span=document.createElement("span"); span.textContent=plistName; span.style.cursor='pointer'; span.onclick=()=>showPlaylistSongs(plistName); lyricsDiv.appendChild(span); }); }
-function showPlaylistSongs(plistName){ songs=playlists[plistName]; currentSong=0; lyricsDiv.innerHTML=""; songs.forEach((song,i)=>{ const span=document.createElement("span"); span.textContent=song.name; span.style.cursor='pointer'; span.onclick=()=>{loadSong(i);audio.play(); switchPage('home');}; lyricsDiv.appendChild(span); }); }
-function switchPage(page){ currentPage=page;
-  if(page==='home'){ pageTitle.textContent="🤬 Censored Music"; cover.style.display="block"; songName.style.display="block"; songControls.style.display="flex"; loadSong(currentSong); miniBar.classList.remove('visible'); }
-  else if(page==='album'){ pageTitle.textContent="💿 Playlist"; cover.style.display="block"; songName.style.display="block"; songControls.style.display="none"; showPlaylists(); lyricsDiv.style.display="block"; miniBar.classList.add('visible'); }
-  else if(page==='queue'){ pageTitle.textContent="🎵 Queue Page"; cover.style.display="none"; songName.style.display="none"; songControls.style.display="none"; renderQueue(); lyricsDiv.style.display="block"; miniBar.classList.add('visible'); }
-  else if(page==='search'){ pageTitle.textContent="🔍 Search"; cover.style.display="none"; songName.style.display="none"; songControls.style.display="none"; lyricsDiv.innerHTML=`<input class="search-input" id="searchInput" placeholder="Search songs..." oninput="filterSongs()"><div id="searchResults"></div>`; document.getElementById("searchResults").innerHTML=songs.map((s,i)=>`<span onclick="playFromSearch(${i})">${s.name}</span>`).join(""); lyricsDiv.style.display="block"; miniBar.classList.add('visible'); }
+// Playlist Handling
+function showPlaylists(){
+  lyricsDiv.innerHTML="";
+  Object.keys(playlists).forEach(plistName=>{
+    const span=document.createElement("span");
+    span.textContent=plistName;
+    span.style.cursor='pointer';
+    span.onclick=()=>showPlaylistSongs(plistName);
+    lyricsDiv.appendChild(span);
+  });
 }
-function filterSongs(){ const query=document.getElementById("searchInput").value.toLowerCase(); const resultsDiv=document.getElementById("searchResults"); resultsDiv.innerHTML=songs.map((s,i)=>s.name.toLowerCase().includes(query)?`<span onclick="playFromSearch(${i})">${s.name}</span>`:'').join(''); }
+
+function showPlaylistSongs(plistName){
+  songs=playlists[plistName]; // change current song array
+  currentSong=0;
+  lyricsDiv.innerHTML="";
+  songs.forEach((song,i)=>{
+    const span=document.createElement("span");
+    span.textContent=song.name;
+    span.style.cursor='pointer';
+    span.onclick=()=>{loadSong(i);audio.play(); switchPage('home');};
+    lyricsDiv.appendChild(span);
+  });
+}
+
+// Page Switching
+function switchPage(page){
+  currentPage=page;
+
+  if(page==='home'){
+    pageTitle.textContent="🤬 Censored Music";
+    cover.style.display="block"; songName.style.display="block"; songControls.style.display="flex"; 
+    loadSong(currentSong);
+    miniBar.classList.remove('visible');
+  } else if(page==='album'){
+    pageTitle.textContent="💿 Playlist";
+    cover.style.display="block"; songName.style.display="block"; songControls.style.display="none"; 
+    showPlaylists();
+    lyricsDiv.style.display="block";
+    miniBar.classList.add('visible');
+  } else if(page==='queue'){
+    pageTitle.textContent="🎵 Queue Page";
+    cover.style.display="none"; songName.style.display="none"; songControls.style.display="none";
+    renderQueue(); lyricsDiv.style.display="block";
+    miniBar.classList.add('visible');
+  } else if(page==='search'){
+    pageTitle.textContent="🔍 Search";
+    cover.style.display="none"; songName.style.display="none"; songControls.style.display="none";
+    lyricsDiv.innerHTML=`<input class="search-input" id="searchInput" placeholder="Search songs..." oninput="filterSongs()"><div id="searchResults"></div>`;
+    document.getElementById("searchResults").innerHTML=songs.map((s,i)=>`<span onclick="playFromSearch(${i})">${s.name}</span>`).join("");
+    lyricsDiv.style.display="block";
+    miniBar.classList.add('visible');
+  }
+}
+
+function filterSongs(){
+  const query=document.getElementById("searchInput").value.toLowerCase();
+  const resultsDiv=document.getElementById("searchResults");
+  resultsDiv.innerHTML=songs.map((s,i)=>s.name.toLowerCase().includes(query)?`<span onclick="playFromSearch(${i})">${s.name}</span>`:'').join('');
+}
+
 function playFromSearch(index){currentSong=index;loadSong(currentSong);audio.play();switchPage('home');}
 
-// --- HIDDEN AMELIE MESSAGE ---
-const amelie=[65,109,101,108,105,101]; // char codes
-// decode like: String.fromCharCode(...amelie);
+// ---- SECRET CODE FEATURE ----
+let secretActive=false;
+let typed="";
+const code="150677";
+let buffer="";
 
-// --- BLOCK DEVTOOLS & CONSOLE ---
+document.addEventListener("keydown", e=>{
+  buffer+=e.key.toLowerCase();
+  if(buffer.endsWith("secret")){
+    toggleSecret();
+    buffer="";
+  }
+});
+
+function toggleSecret(){
+  secretActive=!secretActive;
+  if(secretActive){
+    player.innerHTML=`
+      <div class="secret-screen">
+        <div>Enter Code</div>
+        <div class="secret-code" id="secretCode"></div>
+        <div class="keypad" id="keypad">
+          ${[1,2,3,4,5,6,7,8,9,'',0,''].map(n=>`<button onclick="pressKey('${n}')">${n}</button>`).join('')}
+        </div>
+      </div>`;
+  } else location.reload();
+}
+
+function pressKey(n){
+  if(n==='') return;
+  typed+=n;
+  updateSecret();
+}
+
+function updateSecret(){
+  const el=document.getElementById("secretCode");
+  el.textContent="•".repeat(typed.length);
+  if(typed===code) el.textContent="Amelie";
+  if(typed.length>code.length) typed="";
+}
+
+// ---- END SECRET FEATURE ----
+ 
+// ---- BLOCK DEVTOOLS AND CONSOLE ----
 (function(){
   const forbiddenKeys=[123,[17,16,73],[17,16,74],[17,16,67],[17,85]];
   document.addEventListener("keydown",e=>{
@@ -244,10 +355,9 @@ const amelie=[65,109,101,108,105,101]; // char codes
   },500);
 })();
 
-// --- INIT ---
+// Init
 loadSong(currentSong);
 switchPage('home');
 </script>
 </body>
 </html>
-
