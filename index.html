@@ -3,10 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🤬Censored Music</title>
+  <title>Harris Academy Morden</title>
   <link rel="icon" type="image/png" href="covers/icon.png">
 
   <style>
+    :root {
+      --accent-color: #1db954;
+      --bg-image: url('covers/daylight.jpg');
+    }
+
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
@@ -19,19 +24,35 @@
       transition: background 0.5s;
     }
 
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: var(--bg-image);
+      background-size: cover;
+      background-position: center;
+      filter: blur(40px) brightness(0.5);
+      z-index: -1;
+      transition: 0.5s;
+    }
+
     .player {
       width: 350px;
+      height: 600px; /* fixed height */
       background: #181818;
       border-radius: 16px;
       padding: 20px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-      transition: all 0.5s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.3s;
     }
 
     .title {
       text-align: center;
       font-size: 1.4rem;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
 
     .cover {
@@ -40,24 +61,27 @@
       background-size: cover;
       background-position: center;
       border-radius: 12px;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
+      flex-shrink: 0;
     }
 
     .song-name {
       text-align: center;
       font-size: 1.1rem;
       margin-bottom: 10px;
+      flex-shrink: 0;
     }
 
     .controls {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin: 15px 0;
+      margin: 10px 0;
+      flex-shrink: 0;
     }
 
     button {
-      background: #1db954;
+      background: var(--accent-color);
       border: none;
       color: black;
       padding: 10px 15px;
@@ -72,13 +96,14 @@
     }
 
     .lyrics {
-      height: 150px;
+      flex: 1;
       overflow-y: auto;
       background: #101010;
       padding: 10px;
       border-radius: 10px;
       font-size: 0.9rem;
       line-height: 1.4;
+      margin-bottom: 10px;
     }
 
     .lyrics span {
@@ -94,29 +119,67 @@
     .nav-buttons {
       display: flex;
       justify-content: space-around;
-      margin-top: 15px;
+      margin-top: 5px;
+      flex-shrink: 0;
     }
 
-    body::before {
-      content: "";
+    /* Mini floating bar */
+    .mini-bar {
       position: fixed;
-      inset: 0;
-      background-image: var(--bg-image);
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 350px;
+      background: #181818;
+      border-radius: 16px 16px 0 0;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+    }
+
+    .mini-cover {
+      width: 50px;
+      height: 50px;
       background-size: cover;
-      background-position: center;
-      filter: blur(40px) brightness(0.5);
-      z-index: -1;
-      transition: 0.5s;
+      border-radius: 10px;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .mini-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .mini-info span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mini-controls button {
+      padding: 5px 10px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 10px;
+      font-size: 1rem;
     }
   </style>
 </head>
 <body>
 
   <div class="player" id="player">
-    <div class="title" id="pageTitle">Harris Academy Morden</div>
-
+    <div class="title" id="pageTitle">🤬 Censored Music</div>
     <div id="cover" class="cover"></div>
-
     <div id="songName" class="song-name"></div>
 
     <div class="controls" id="songControls">
@@ -131,10 +194,22 @@
       <button onclick="switchPage('home')">🏝️ Home</button>
       <button onclick="switchPage('album')">💿 Album</button>
       <button onclick="switchPage('queue')">🎵 Queue</button>
+      <button onclick="switchPage('search')">🔍 Search</button>
     </div>
-
-    <audio id="audio"></audio>
   </div>
+
+  <!-- Mini Floating Bar -->
+  <div class="mini-bar" id="miniBar">
+    <div class="mini-cover" id="miniCover"></div>
+    <div class="mini-info">
+      <span id="miniSongName"></span>
+    </div>
+    <div class="mini-controls">
+      <button onclick="togglePlay()">▶ / ⏸</button>
+    </div>
+  </div>
+
+  <audio id="audio"></audio>
 
 <script>
 const songs = [
@@ -163,22 +238,29 @@ const songs = [
 
 let currentSong = 0;
 let currentPage = 'home';
+
 const audio = document.getElementById("audio");
 const cover = document.getElementById("cover");
 const songName = document.getElementById("songName");
 const lyricsDiv = document.getElementById("lyrics");
 const pageTitle = document.getElementById("pageTitle");
 const songControls = document.getElementById("songControls");
+const miniBar = document.getElementById("miniBar");
+const miniCover = document.getElementById("miniCover");
+const miniSongName = document.getElementById("miniSongName");
 
 function loadSong(index) {
   const song = songs[index];
   audio.src = song.src;
   cover.style.backgroundImage = `url('${song.cover}')`;
   songName.textContent = song.name;
+  miniCover.style.backgroundImage = `url('${song.cover}')`;
+  miniSongName.textContent = song.name;
 
   document.body.style.setProperty("--bg-image", `url('${song.cover}')`);
   extractAccentColor(song.cover);
 
+  // load lyrics
   lyricsDiv.innerHTML = "";
   song.lyrics.forEach(line => {
     const span = document.createElement("span");
@@ -238,31 +320,63 @@ function extractAccentColor(imageSrc) {
 
 function switchPage(page) {
   currentPage = page;
-  if (page === 'home') {
-    pageTitle.textContent = "🏝️ Floating Island";
+
+  if(page==='home') {
+    pageTitle.textContent = "🤬 Censored Music";
     cover.style.display = "block";
     songName.style.display = "block";
     songControls.style.display = "flex";
     lyricsDiv.style.display = "block";
-  } else if (page === 'album') {
+  } else if(page==='album') {
     pageTitle.textContent = "💿 Album Page";
     cover.style.display = "block";
     songName.style.display = "block";
     songControls.style.display = "none";
     lyricsDiv.style.display = "none";
-  } else if (page === 'queue') {
+  } else if(page==='queue') {
     pageTitle.textContent = "🎵 Queue Page";
     cover.style.display = "none";
     songName.style.display = "none";
     songControls.style.display = "none";
-    lyricsDiv.innerHTML = songs.map(s => `<span>${s.name}</span>`).join("");
+    lyricsDiv.innerHTML = songs.map((s,i) => {
+      return `<span>${i===currentSong ? '➡ ' : ''}${s.name}</span>`;
+    }).join("");
+    lyricsDiv.style.display = "block";
+  } else if(page==='search') {
+    pageTitle.textContent = "🔍 Search";
+    cover.style.display = "none";
+    songName.style.display = "none";
+    songControls.style.display = "none";
+    lyricsDiv.innerHTML = `
+      <input class="search-input" id="searchInput" placeholder="Search songs..." oninput="filterSongs()">
+      <div id="searchResults"></div>
+    `;
+    document.getElementById("searchResults").innerHTML = songs.map((s,i)=>`<span onclick="playFromSearch(${i})">${s.name}</span>`).join("");
     lyricsDiv.style.display = "block";
   }
 }
 
-// Load first song on startup
+function filterSongs() {
+  const query = document.getElementById("searchInput").value.toLowerCase();
+  const resultsDiv = document.getElementById("searchResults");
+  resultsDiv.innerHTML = songs.map((s,i)=>{
+    if(s.name.toLowerCase().includes(query)) return `<span onclick="playFromSearch(${i})">${s.name}</span>`;
+    else return '';
+  }).join('');
+}
+
+function playFromSearch(index){
+  currentSong = index;
+  loadSong(currentSong);
+  audio.play();
+  switchPage('home');
+}
+
+// Load first song
 loadSong(currentSong);
 switchPage('home');
+
 </script>
 </body>
 </html>
+
