@@ -105,11 +105,20 @@ button:hover { opacity:0.85; }
 <audio id="audio"></audio>
 
 <script>
-const songs=[
-  {name:"Daylight (Drake)",src:"music/daylight_drake.mp3",cover:"covers/daylight.jpg",lyrics:[{time:0,text:"Treat all my exes like Jehovah's Witnesses"},{time:4,text:"Free all the dogs and fuck all the witnesses"},{time:8,text:"They sittin' down, we standin' on business"},{time:12,text:"Ayy, standin' on business"}]},
-  {name:"Parade on Cleveland (Young Thug ft. Drake)",src:"music/parade_on_cleveland.mp3",cover:"covers/parade.jpg",lyrics:[{time:0,text:"Whoa"},{time:3,text:"How the fuck you out here goin' tit-for-tat?"},{time:6,text:"I shoulda saw the signs, how could I miss that?"}]}
-];
+// Songs and Multiple Playlists
+const playlists = {
+  "Raghib's Playlist": [
+    {name:"Daylight (Drake)",src:"music/daylight_drake.mp3",cover:"covers/daylight.jpg",lyrics:[{time:0,text:"Treat all my exes like Jehovah's Witnesses"},{time:4,text:"Free all the dogs and fuck all the witnesses"}]},
+    {name:"Parade on Cleveland (Young Thug ft. Drake)",src:"music/parade_on_cleveland.mp3",cover:"covers/parade.jpg",lyrics:[{time:0,text:"Whoa"},{time:3,text:"How the fuck you out here goin' tit-for-tat?"}]}
+  ],
+  "Chill Vibes": [
+    {name:"Song A",src:"music/songA.mp3",cover:"covers/songA.jpg",lyrics:[]},
+    {name:"Song B",src:"music/songB.mp3",cover:"covers/songB.jpg",lyrics:[]}
+  ]
+};
 
+// Default songs array for Home / Queue
+let songs = playlists["Raghib's Playlist"];
 let currentSong=0;
 let currentPage='home';
 
@@ -124,6 +133,7 @@ const miniCover=document.getElementById("miniCover");
 const miniSongName=document.getElementById("miniSongName");
 const progressFill=document.getElementById("progressFill");
 
+// Load a song
 function loadSong(index){
   const song=songs[index];
   audio.src=song.src;
@@ -134,7 +144,6 @@ function loadSong(index){
   document.body.style.setProperty("--bg-image",`url('${song.cover}')`);
   extractAccentColor(song.cover);
 
-  // load lyrics
   if(currentPage==='home'){
     lyricsDiv.innerHTML="";
     song.lyrics.forEach(line=>{
@@ -146,10 +155,12 @@ function loadSong(index){
   }
 }
 
+// Play / Pause
 function togglePlay(){if(audio.paused)audio.play();else audio.pause();}
 function nextSong(){currentSong=(currentSong+1)%songs.length;loadSong(currentSong);audio.play();}
 function prevSong(){currentSong=(currentSong-1+songs.length)%songs.length;loadSong(currentSong);audio.play();}
 
+// Progress bar & lyrics highlighting
 audio.addEventListener("timeupdate",()=>{
   const currentTime=audio.currentTime;
   const lines=lyricsDiv.querySelectorAll("span");
@@ -161,6 +172,7 @@ audio.addEventListener("timeupdate",()=>{
   progressFill.style.width=isNaN(progress)?'0%':progress+'%';
 });
 
+// Accent color extraction
 function extractAccentColor(imageSrc){
   const img=new Image(); img.crossOrigin="anonymous"; img.src=imageSrc;
   img.onload=()=>{
@@ -198,6 +210,31 @@ function renderQueue(){
   });
 }
 
+// Playlist Handling
+function showPlaylists(){
+  lyricsDiv.innerHTML="";
+  Object.keys(playlists).forEach(plistName=>{
+    const span=document.createElement("span");
+    span.textContent=plistName;
+    span.style.cursor='pointer';
+    span.onclick=()=>showPlaylistSongs(plistName);
+    lyricsDiv.appendChild(span);
+  });
+}
+
+function showPlaylistSongs(plistName){
+  songs=playlists[plistName]; // change current song array
+  currentSong=0;
+  lyricsDiv.innerHTML="";
+  songs.forEach((song,i)=>{
+    const span=document.createElement("span");
+    span.textContent=song.name;
+    span.style.cursor='pointer';
+    span.onclick=()=>{loadSong(i);audio.play(); switchPage('home');};
+    lyricsDiv.appendChild(span);
+  });
+}
+
 // Page Switching
 function switchPage(page){
   currentPage=page;
@@ -205,24 +242,12 @@ function switchPage(page){
   if(page==='home'){
     pageTitle.textContent="🤬 Censored Music";
     cover.style.display="block"; songName.style.display="block"; songControls.style.display="flex"; 
-    // Clear lyricsDiv and load current song lyrics
-    lyricsDiv.innerHTML="";
-    songs[currentSong].lyrics.forEach(line=>{
-      const span=document.createElement("span");
-      span.textContent=line.text;
-      span.dataset.time=line.time;
-      lyricsDiv.appendChild(span);
-    });
+    loadSong(currentSong);
     miniBar.classList.remove('visible');
   } else if(page==='album'){
     pageTitle.textContent="💿 Playlist";
-    cover.style.display="block"; songName.style.display="block"; songControls.style.display="none"; lyricsDiv.innerHTML="";
-    songs.forEach((s,i)=>{
-      const span=document.createElement("span");
-      span.textContent=s.name; span.style.cursor='pointer';
-      span.onclick=()=>{currentSong=i; loadSong(currentSong); audio.play(); switchPage('home');};
-      lyricsDiv.appendChild(span);
-    });
+    cover.style.display="block"; songName.style.display="block"; songControls.style.display="none"; 
+    showPlaylists();
     lyricsDiv.style.display="block";
     miniBar.classList.add('visible');
   } else if(page==='queue'){
@@ -254,4 +279,5 @@ switchPage('home');
 </script>
 </body>
 </html>
+
 
