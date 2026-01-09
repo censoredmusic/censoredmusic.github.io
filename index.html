@@ -1,109 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Harris Academy Morden</title>
-<link rel="icon" type="image/png" href="covers/icon.png">
-<style>
-:root {
-  --accent-color: #1db954;
-  --bg-image: url('covers/daylight.jpg');
-}
-body {
-  margin:0; font-family: Arial, Helvetica, sans-serif;
-  background:#000; color:white;
-  display:flex; justify-content:center; align-items:center;
-  min-height:100vh; transition:background 0.5s;
-}
-body::before {
-  content:""; position:fixed; inset:0;
-  background-image: var(--bg-image);
-  background-size:cover; background-position:center;
-  filter: blur(40px) brightness(0.5);
-  z-index:-1; transition:0.5s;
-}
-.player {
-  width:350px; height:600px; background:#181818;
-  border-radius:16px; padding:20px;
-  box-shadow:0 20px 40px rgba(0,0,0,0.5);
-  display:flex; flex-direction:column; justify-content:space-between;
-  transition:all 0.3s;
-}
-.title { text-align:center; font-size:1.4rem; margin-bottom:10px; }
-.cover { width:100%; height:300px; background-size:cover; background-position:center; border-radius:12px; margin-bottom:10px; flex-shrink:0; }
-.song-name { text-align:center; font-size:1.1rem; margin-bottom:10px; flex-shrink:0; }
-.controls { display:flex; justify-content:space-between; align-items:center; margin:10px 0; flex-shrink:0; }
-button { background:var(--accent-color); border:none; color:black; padding:10px 15px; border-radius:50px; font-weight:bold; cursor:pointer; transition:0.2s; }
-button:hover { opacity:0.85; }
-.lyrics { flex:1; overflow-y:auto; background:#101010; padding:10px; border-radius:10px; font-size:0.9rem; line-height:1.4; margin-bottom:10px; }
-.lyrics span { color:#888; display:block; padding:5px; cursor:pointer; }
-.lyrics span.active { color: var(--accent-color); font-weight:bold; }
-.lyrics span.dragging { opacity:0.5; }
-.nav-buttons { display:flex; justify-content:space-around; margin-top:5px; flex-shrink:0; }
-
-/* Mini Floating Bar */
-.mini-bar {
-  position: fixed; bottom:0; left:50%; transform:translateX(-50%);
-  width:350px; border-radius:16px 16px 0 0; padding:10px;
-  display:flex; align-items:center; justify-content:space-between;
-  box-shadow:0 -5px 15px rgba(0,0,0,0.5);
-  backdrop-filter: blur(20px) saturate(180%);
-  background: rgba(255,255,255,0.1);
-  border:1px solid rgba(255,255,255,0.2);
-  opacity:0; pointer-events:none;
-  transition: opacity 0.5s;
-}
-.mini-bar.visible { opacity:1; pointer-events:auto; animation: fadeIn 0.6s ease; }
-@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
-
-.mini-cover { width:50px; height:50px; background-size:cover; border-radius:10px; margin-right:10px; flex-shrink:0; }
-.mini-info { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.mini-info span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mini-controls button { padding:5px 10px; }
-.progress-bar { width:100%; height:5px; background:#333; border-radius:5px; margin-top:2px; }
-.progress-fill { height:100%; background:var(--accent-color); border-radius:5px; width:0%; }
-
-.search-input { width:100%; padding:8px; border-radius:10px; border:none; margin-bottom:10px; font-size:1rem; }
-</style>
-</head>
-<body>
-
-<div class="player" id="player">
-  <div class="title" id="pageTitle">🤬 Censored Music</div>
-  <div id="cover" class="cover"></div>
-  <div id="songName" class="song-name"></div>
-
-  <div class="controls" id="songControls">
-    <button onclick="prevSong()">⏮ Back</button>
-    <button onclick="togglePlay()">▶ / ⏸</button>
-    <button onclick="nextSong()">Next ⏭</button>
-  </div>
-
-  <div id="lyrics" class="lyrics"></div>
-
-  <div class="nav-buttons">
-    <button onclick="switchPage('home')">🏝️ Home</button>
-    <button onclick="switchPage('album')">💿 Playlist</button>
-    <button onclick="switchPage('queue')">🎵 Queue</button>
-    <button onclick="switchPage('search')">🔍 Search</button>
-  </div>
-</div>
-
-<!-- Mini Floating Bar -->
-<div class="mini-bar" id="miniBar">
-  <div class="mini-cover" id="miniCover"></div>
-  <div class="mini-info">
-    <span id="miniSongName"></span>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-  </div>
-  <div class="mini-controls">
-    <button onclick="togglePlay()">▶ / ⏸</button>
-  </div>
-</div>
-
-<audio id="audio"></audio>
-
 <script>
 // Songs and Multiple Playlists
 const playlists = {
@@ -239,6 +133,8 @@ function showPlaylistSongs(plistName){
 function switchPage(page){
   currentPage=page;
 
+  if(secretActive) return; // don't switch pages in secret mode
+
   if(page==='home'){
     pageTitle.textContent="🤬 Censored Music";
     cover.style.display="block"; songName.style.display="block"; songControls.style.display="flex"; 
@@ -273,10 +169,83 @@ function filterSongs(){
 
 function playFromSearch(index){currentSong=index;loadSong(currentSong);audio.play();switchPage('home');}
 
+// --- SECRET KEYPAD FEATURE ---
+let secretActive = false;
+let keySequence = "";
+let typedKeys = "";
+const expectedCode = "150677";
+
+document.addEventListener('keydown', e => {
+  const key = e.key.toLowerCase();
+  
+  // Toggle secret mode if typing 'secret'
+  keySequence += key;
+  if(keySequence.endsWith('secret')){
+    secretActive = !secretActive;
+    keySequence = "";
+    typedKeys = "";
+
+    if(secretActive){
+      activateSecretKeypad();
+    } else {
+      deactivateSecretKeypad();
+    }
+  }
+
+  if(secretActive && !isNaN(key)) {
+    typedKeys += key;
+    updateKeypadDisplay(typedKeys);
+
+    if(typedKeys === expectedCode){
+      showSecretMessage();
+      typedKeys = "";
+    } else if(typedKeys.length > expectedCode.length){
+      typedKeys = "";
+      updateKeypadDisplay(typedKeys);
+    }
+  }
+});
+
+function activateSecretKeypad(){
+  cover.style.display = "none";
+  songName.style.display = "none";
+  songControls.style.display = "none";
+  lyricsDiv.innerHTML = "";
+
+  const keypad = document.createElement('div');
+  keypad.id = 'secretKeypad';
+  keypad.style.display = 'flex';
+  keypad.style.flexDirection = 'column';
+  keypad.style.alignItems = 'center';
+  keypad.style.justifyContent = 'center';
+  keypad.style.flex = '1';
+  keypad.style.fontSize = '2rem';
+  keypad.style.color = 'white';
+  keypad.innerHTML = `<div id="keypadDisplay">Enter code:</div>`;
+  lyricsDiv.appendChild(keypad);
+}
+
+function deactivateSecretKeypad(){
+  const keypad = document.getElementById('secretKeypad');
+  if(keypad) keypad.remove();
+
+  cover.style.display = "block";
+  songName.style.display = "block";
+  songControls.style.display = "flex";
+  loadSong(currentSong);
+}
+
+function updateKeypadDisplay(input){
+  const display = document.getElementById('keypadDisplay');
+  if(display) display.textContent = input ? input : 'Enter code:';
+}
+
+function showSecretMessage(){
+  const display = document.getElementById('keypadDisplay');
+  if(display) display.textContent = "🎉 Secret Unlocked! 🎉";
+}
+
 // Init
 loadSong(currentSong);
 switchPage('home');
 </script>
-</body>
-</html>
-
