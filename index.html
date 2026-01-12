@@ -363,11 +363,6 @@ function updateSecret(){
   Object.defineProperty(console,"warn",{value:()=>{}});
   Object.defineProperty(console,"error",{value:()=>{}});
   let devOpen=false;
-  setInterval(()=>{
-    if(window.outerWidth-window.innerWidth>100||window.outerHeight-window.innerHeight>100){
-      if(!devOpen){devOpen=true; location.reload();}
-    } else devOpen=false;
-  },500);
 })();
 
 // Init
