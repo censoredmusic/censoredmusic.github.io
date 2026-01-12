@@ -108,7 +108,6 @@ button:hover { opacity:0.85; }
   </div>
 </div>
 
-<!-- Mini Floating Bar -->
 <div class="mini-bar" id="miniBar">
   <div class="mini-cover" id="miniCover"></div>
   <div class="mini-info">
@@ -123,7 +122,7 @@ button:hover { opacity:0.85; }
 <audio id="audio"></audio>
 
 <script>
-// Songs and Multiple Playlists
+// ----- SONGS -----
 const playlists = {
   "All songs": [
     {name:"Daylight (Drake)",src:"music/daylight_drake.mp3",cover:"covers/daylight.jpg",lyrics:[{time:0,text:"Treat all my exes like Jehovah's Witnesses"},{time:4,text:"Free all the dogs and f##k  all the witnesses"}]},
@@ -135,11 +134,10 @@ const playlists = {
     {name:"CRG by Central cee ft Dave",src:"music/CRG.mp3",cover:"covers/CRG.jpg",lyrics:[{time:0,text:"Fifth track, almost done"}]},
     {name:"Carnival by ye",src:"music/Carnival.mp3",cover:"covers/Carnival.jpg",lyrics:[{time:0,text:"Sixth secret revealed"}]},
     {name:"Sicko Mode by Travis Scott ft Drake",src:"music/Sickomode.mp3",cover:"covers/Sickomode.jpg",lyrics:[{time:0,text:"Lucky seventh, last secret"}]},
-    
-    // ✅ NEW TRAVIS SCOTT SONGS
     {name:"AstroThunder by Travis Scott",src:"music/Astrothunder.mp3",cover:"covers/Astrothunder.jpg",lyrics:[{time:0,text:"Lucky seventh, last secret"}]},
     {name:"Fe!n by Travis Scott",src:"music/Fe!n.mp3",cover:"covers/Fe!n.jpg",lyrics:[{time:0,text:"Lucky seventh, last secret"}]},
-    {name:"Butterfly Effect by Travis Scott",src:"music/Butterfly.mp3",cover:"covers/Butterfly.jpg",lyrics:[{time:0,text:"Lucky seventh, last secret"}]}
+    {name:"Butterfly Effect by Travis Scott",src:"music/Butterfly.mp3",cover:"covers/Butterfly.jpg",lyrics:[{time:0,text:"Lucky seventh, last secret"}]},
+    {name:"Runaway by ye ft Pusha T",src:"music/Runaway.mp3",cover:"covers/Runaway.jpg",lyrics:[{time:0,text:"I always find, yeah, I always find something wrong"}]}
   ],
   "Unnamed": [
     {name:"Song A",src:"music/songA.mp3",cover:"covers/songA.jpg",lyrics:[]},
@@ -147,22 +145,19 @@ const playlists = {
   ]
 };
 
-// Default songs array for Home / Queue
+// ----- VARIABLES -----
 let songs = playlists["All songs"];
-let currentSong=0;
-let currentPage='home';
-
-const audio=document.getElementById("audio");
-const cover=document.getElementById("cover");
-const songName=document.getElementById("songName");
-const lyricsDiv=document.getElementById("lyrics");
-const pageTitle=document.getElementById("pageTitle");
-const songControls=document.getElementById("songControls");
-const miniBar=document.getElementById("miniBar");
-const miniCover=document.getElementById("miniCover");
-const miniSongName=document.getElementById("miniSongName");
-const progressFill=document.getElementById("progressFill");
-
+let currentSong = 0;
+let currentPage = 'home';
+const audio = document.getElementById("audio");
+const cover = document.getElementById("cover");
+const songName = document.getElementById("songName");
+const lyricsDiv = document.getElementById("lyrics");
+const pageTitle = document.getElementById("pageTitle");
+const miniBar = document.getElementById("miniBar");
+const miniCover = document.getElementById("miniCover");
+const miniSongName = document.getElementById("miniSongName");
+const progressFill = document.getElementById("progressFill");
 // ---- FULL ORIGINAL JS BELOW ----
 // (Load songs, play/pause, next/prev, progress bar, accent color, queue, playlist, page switching, search, secret menu, devtools block)
 // ... KEEP ALL YOUR ORIGINAL FUNCTIONS AS IS ...
