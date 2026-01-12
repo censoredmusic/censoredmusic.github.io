@@ -126,7 +126,76 @@ button:hover { opacity:0.85; }
 // Songs and Multiple Playlists
 const playlists = {
   "Raghib's Playlist": [
-    {name:"Daylight (Drake)",src:"music/daylight_drake.mp3",cover:"covers/daylight.jpg",lyrics:[{time:0,text:"Treat all my exes like Jehovah's Witnesses"},{time:4,text:"Free all the dogs and fuck all the witnesses"}]},
+    {
+  name:"Daylight (Drake)",
+  src:"music/daylight_drake.mp3",
+  cover:"covers/daylight.jpg",
+  lyrics:[
+    {time:0,  text:"You're all a bunch of fucking assholes"},
+    {time:4,  text:"You know why?"},
+    {time:8,  text:"You need people like me"},
+    {time:14, text:"You need people like me, so you can point your fucking fingers"},
+    {time:0,  text:"And say that's the bad guy"},
+    {time:3,  text:"Yeah (808 Mafia)"},
+    {time:5,  text:"Grah"},
+    {time:7,  text:"Treat all my exes like Jehovah's Witnesses"},
+    {time:11, text:"Free all the dogs and witnesses"},
+    {time:15, text:"They sittin' down, we standin' on business"},
+    {time:19, text:"Ayy, standin' on business"},
+    {time:22, text:"Standin' on business"},
+    {time:25, text:"Standin' on business"},
+    {time:28, text:"Standin' on, ooh"},
+    {time:31, text:"Trying to mess with the ex lookalikes"},
+    {time:35, text:"Making her vex, too complex"},
+    {time:38, text:"Gold around my neck shining"},
+    {time:41, text:"He talkin' down, he gets put in a lake"},
+    {time:45, text:"Capo type showing up to the wake"},
+    {time:48, text:"Geekin' hard, don't know what to take"},
+    {time:52, text:"Don't know what I took"},
+    {time:55, text:"Doggy got booked for acting like Book"},
+    {time:59, text:"Shot him in daylight"},
+    {time:63, text:"Shot him in daylight"},
+    {time:67, text:"Shot him in daylight"},
+    {time:71, text:"She went to Jung and bought a body"},
+    {time:75, text:"I wasn't there when they caught the body"},
+    {time:79, text:"TPS think I bought the body"},
+    {time:83, text:"Internet swear that I bought the body"},
+    {time:87, text:"Take more than that to go pop somebody"},
+    {time:91, text:"Them talking about everybody"},
+    {time:95, text:"Lowkey happy they got somebody"},
+    {time:99, text:"What's in your shoe? Sockin'"},
+    {time:103,text:"What's on your wrist? Clockin'"},
+    {time:107,text:"Anyone home? Knockin'"},
+    {time:111,text:"Clumsy, droppin'"},
+    {time:115,text:"Lenny Kravitz show, rockin'"},
+    {time:119,text:"Tennis indoors, squashin'"},
+    {time:123,text:"Combo number one, whoppin'"},
+    {time:127,text:"Grabbin' his girl, leave a note"},
+    {time:131,text:"She broke up, deleted a post"},
+    {time:135,text:"She said she was vegan, eatin' a goat"},
+    {time:139,text:"Geekin' hard, know how it looks"},
+    {time:143,text:"Don't know what I took"},
+    {time:147,text:"Doggy got booked for acting like Book"},
+    {time:151,text:"Shot him in daylight"},
+    {time:155,text:"Shot him in daylight"},
+    {time:159,text:"Shot him in daylight"},
+    {time:163,text:"Don't talk to my man like that"},
+    {time:167,text:"I like it when you like it"},
+    {time:171,text:"My, my, my, my man"},
+    {time:175,text:"My, my, my, my man"},
+    {time:179,text:"Don't talk to my man like that"},
+    {time:183,text:"I like it when you like it"},
+    {time:187,text:"My, my, my, my man"},
+    {time:191,text:"My, my, my, my man"},
+    {time:195,text:"You know which one you want"},
+    {time:199,text:"I don't care which one you want"},
+    {time:203,text:"You can take whatever"},
+    {time:207,text:"I don't care what you do"},
+    {time:211,text:"Always watchin' for you"},
+  
+  ]
+},
+
     {name:"Parade on Cleveland (Young Thug ft. Drake)",src:"music/parade_on_cleveland.mp3",cover:"covers/parade.jpg",lyrics:[{time:0,text:"Whoa"},{time:3,text:"How the fuck you out here goin' tit-for-tat?"}]},
     
     // 7 NEW SONGS ADDED
@@ -350,20 +419,6 @@ function updateSecret(){
 // ---- END SECRET FEATURE ----
  
 // ---- BLOCK DEVTOOLS AND CONSOLE ----
-(function(){
-  const forbiddenKeys=[123,[17,16,73],[17,16,74],[17,16,67],[17,85]];
-  document.addEventListener("keydown",e=>{
-    forbiddenKeys.forEach(f=>{
-      if(Array.isArray(f)?f.every(k=>{return (e.ctrlKey||e.metaKey) && (e.shiftKey==!!f[1]) && e.keyCode==f[2];}):e.keyCode==f)
-      e.preventDefault();
-    });
-  });
-  document.addEventListener("contextmenu", e=>e.preventDefault());
-  Object.defineProperty(console,"log",{value:()=>{}});
-  Object.defineProperty(console,"warn",{value:()=>{}});
-  Object.defineProperty(console,"error",{value:()=>{}});
-  let devOpen=false;
-})();
 
 // Init
 loadSong(currentSong);
