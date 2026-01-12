@@ -101,9 +101,9 @@ button:hover { opacity:0.85; }
   <div id="lyrics" class="lyrics"></div>
 
   <div class="nav-buttons">
-    <button onclick="switchPage('home')">Home</button>
+    <button onclick="switchPage('home')">🏝️ Home</button>
     <button onclick="switchPage('album')">💿 Playlist</button>
-    <button onclick="switchPage('queue')">Queue</button>
+    <button onclick="switchPage('queue')">🎵 Queue</button>
     <button onclick="switchPage('search')">🔍 Search</button>
   </div>
 </div>
@@ -195,17 +195,7 @@ const playlists = {
   
   ]
 },
-
-    {name:"Parade on Cleveland (Young Thug ft. Drake)",src:"music/parade_on_cleveland.mp3",cover:"covers/parade.jpg",lyrics:[{time:0,text:"Whoa"},{time:3,text:"How the fuck you out here goin' tit-for-tat?"}]},
-    
-    // 7 NEW SONGS ADDED
-    {name:"Overseas by Central Cee and D-Block Europe",src:"music/overseas.mp3",cover:"covers/overseas.jpg",lyrics:[{time:0,text:"This is the first secret line"}]},
-    {name:"Hope by XXXTENTACION",src:"music/Hope.mp3",cover:"covers/Hope.jpg",lyrics:[{time:0,text:"This is the second secret line"}]},
-    {name:"Moonlight by XXXTENTACION",src:"music/Moonlight.mp3",cover:"covers/Moonlight.jpg",lyrics:[{time:0,text:"Secret three is here"}]},
-    {name:"CRG by Central Cee ft Dave",src:"music/CRG.mp3",cover:"covers/CRG.jpg",lyrics:[{time:0,text:"Fourth secret, keep listening"}]},
-    {name:"Shut up by Stormzy",src:"music/Shutup.mp3",cover:"covers/Shutup.jpg",lyrics:[{time:0,text:"Fifth track, almost done"}]},
-    {name:"Carnival by ye",src:"music/Carnival.mp3",cover:"covers/Carnival.jpg",lyrics:[{time:0,text:"Sixth secret revealed"}]},
-    {name:"Fe!n",src:"music/Fe!n.mp3",cover:"covers/Fe!n.jpg",lyrics:[{time:0,text:"Lucky seventh, last secret"}]}
+    {name:"Parade on Cleveland (Young Thug ft. Drake)",src:"music/parade_on_cleveland.mp3",cover:"covers/parade.jpg",lyrics:[{time:0,text:"Whoa"},{time:3,text:"How the fuck you out here goin' tit-for-tat?"}]}
   ],
   "Chill Vibes": [
     {name:"Song A",src:"music/songA.mp3",cover:"covers/songA.jpg",lyrics:[]},
@@ -228,10 +218,6 @@ const miniBar=document.getElementById("miniBar");
 const miniCover=document.getElementById("miniCover");
 const miniSongName=document.getElementById("miniSongName");
 const progressFill=document.getElementById("progressFill");
-
-// ---- FULL ORIGINAL JS BELOW ----
-// Load, Play/Pause, Next/Prev, Progress bar, Accent color, Queue, Playlist, Page switching, Search, Secret Menu, DevTools/Console block
-// EVERYTHING IS THE SAME AS YOUR ORIGINAL CODE
 
 // Load a song
 function loadSong(index){
@@ -398,9 +384,7 @@ function toggleSecret(){
           ${[1,2,3,4,5,6,7,8,9,'',0,''].map(n=>`<button onclick="pressKey('${n}')">${n}</button>`).join('')}
         </div>
       </div>`;
-  
-  } else {
-  window.location.href = window.location.pathname;
+  } else location.reload();
 }
 
 function pressKey(n){
@@ -419,6 +403,25 @@ function updateSecret(){
 // ---- END SECRET FEATURE ----
  
 // ---- BLOCK DEVTOOLS AND CONSOLE ----
+(function(){
+  const forbiddenKeys=[123,[17,16,73],[17,16,74],[17,16,67],[17,85]];
+  document.addEventListener("keydown",e=>{
+    forbiddenKeys.forEach(f=>{
+      if(Array.isArray(f)?f.every(k=>{return (e.ctrlKey||e.metaKey) && (e.shiftKey==!!f[1]) && e.keyCode==f[2];}):e.keyCode==f)
+      e.preventDefault();
+    });
+  });
+  document.addEventListener("contextmenu", e=>e.preventDefault());
+  Object.defineProperty(console,"log",{value:()=>{}});
+  Object.defineProperty(console,"warn",{value:()=>{}});
+  Object.defineProperty(console,"error",{value:()=>{}});
+  let devOpen=false;
+  setInterval(()=>{
+    if(window.outerWidth-window.innerWidth>100||window.outerHeight-window.innerHeight>100){
+      if(!devOpen){devOpen=true; location.reload();}
+    } else devOpen=false;
+  },500);
+})();
 
 // Init
 loadSong(currentSong);
@@ -426,5 +429,3 @@ switchPage('home');
 </script>
 </body>
 </html>
-
-
